@@ -38,7 +38,7 @@ func (command TeamSubscribeCommand) Handler(ctx context.Context, botInstance *bo
 		return
 	}
 
-	var dbTeam = dbModels.Team{Label: team}
+	var dbTeam = dbModels.Team{Label: team, IsActive: true}
 	dbTeamResult := database.DB.First(&dbTeam, dbTeam)
 	if dbTeamResult.RowsAffected == 0 || dbTeamResult.Error != nil {
 		botInstance.SendMessage(ctx, &bot.SendMessageParams{

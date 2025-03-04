@@ -30,6 +30,7 @@ func (TeamSubscriptionsCommand) Handler(ctx context.Context, botInstance *bot.Bo
 
 	var teamSubscriptions []dbModels.Subscription
 	teamSubscriptionsResult := database.DB.Where("chat_id = ?", chatID).
+		Where("Team.is_active = ?", true).
 		Joins("Team").
 		Order("Team.label").
 		Find(&teamSubscriptions)
