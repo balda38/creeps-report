@@ -2,7 +2,8 @@ package commands
 
 import (
 	"context"
-	"strings"
+	"slices"
+	"time"
 
 	"github.com/balda38/creeps-report/database"
 	"github.com/go-telegram/bot"
@@ -10,6 +11,9 @@ import (
 
 	dbModels "github.com/balda38/creeps-report/database/models"
 )
+
+const maxMessageLength = 4096
+const messagesPrefix = "📌 You can subscribe or unsubscribe from the team using the commands below:\n"
 
 type TeamSubscriptionsCommand struct{}
 
@@ -28,26 +32,63 @@ func (TeamSubscriptionsCommand) CommandMatchType() bot.MatchType {
 func (TeamSubscriptionsCommand) Handler(ctx context.Context, botInstance *bot.Bot, update *models.Update) {
 	chatID := update.Message.Chat.ID
 
-	var teamSubscriptions []dbModels.Subscription
-	teamSubscriptionsResult := database.DB.Where("chat_id = ?", chatID).
-		Where("Team.is_active = ?", true).
-		Joins("Team").
-		Order("Team.label").
-		Find(&teamSubscriptions)
+	var teams []dbModels.Team
+	teamsResult := database.DB.Where("is_active = ?", true).
+		Order("label COLLATE NOCASE").
+		Find(&teams)
 
-	if teamSubscriptionsResult.RowsAffected == 0 || teamSubscriptionsResult.Error != nil {
+	var existingSubscriptions []dbModels.Subscription
+	database.DB.Where("chat_id = ?", chatID).Find(&existingSubscriptions)
+
+	if teamsResult.RowsAffected == 0 || teamsResult.Error != nil {
 		botInstance.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: chatID,
-			Text:   "🤷‍♂️ You are not subscribed to any teams.",
+			Text:   "🤷‍♂️ No teams available for subscription.",
 		})
 	} else {
 		var teamList []string
-		for _, subscription := range teamSubscriptions {
-			teamList = append(teamList, subscription.Team.Label)
+		for _, team := range teams {
+			var subscriptionEmoji string
+			var subscriptionCommand string
+			if slices.ContainsFunc(existingSubscriptions, func(subscription dbModels.Subscription) bool {
+				return subscription.TeamID == team.ID
+			}) {
+				subscriptionEmoji = "✅"
+				subscriptionCommand = "to unsubscribe: <code>/team_unsubscribe "
+			} else {
+				subscriptionEmoji = "❌"
+				subscriptionCommand = "to subscribe: <code>/team_subscribe "
+			}
+			subscriptionCommand = subscriptionEmoji + " " + team.Label + " - " + subscriptionCommand + team.Label + "</code>"
+			teamList = append(teamList, subscriptionCommand)
 		}
-		botInstance.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: chatID,
-			Text:   "📌 You are subscribed to the following teams:\n• " + strings.Join(teamList, "\n• "),
-		})
+		// The only message could be too long. Telegram allows only 4096 characters per message
+		// So we need to split the message into smaller parts
+		messages := generateSubscriptionMessages(teamList)
+		for _, message := range messages {
+			botInstance.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID:    chatID,
+				Text:      message,
+				ParseMode: models.ParseModeHTML,
+			})
+			// To avoid throttling
+			time.Sleep(200 * time.Millisecond)
+		}
 	}
+}
+
+func generateSubscriptionMessages(teamLines []string) []string {
+	var messages []string
+	message := messagesPrefix
+	for _, teamLine := range teamLines {
+		if (len(message) + len(teamLine+"\n")) < maxMessageLength {
+			message += teamLine + "\n"
+		} else {
+			messages = append(messages, message)
+			message = messagesPrefix + teamLine + "\n"
+		}
+	}
+	messages = append(messages, message)
+
+	return messages
 }

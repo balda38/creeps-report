@@ -6,4 +6,7 @@ type Team struct {
 	IsActive      bool
 	LastMatchTime int64
 	// TODO: more fields
+
+	// Relationships
+	Subscriptions []Subscription
 }

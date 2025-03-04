@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"slices"
+	"strconv"
+	"strings"
 
 	"github.com/balda38/creeps-report/database/models"
 )
@@ -22,28 +25,52 @@ type OpenDotaTeam struct {
 }
 
 func FetchTeams() []models.Team {
-	response, err := http.Get(teamsAPI)
-	if err != nil {
-		log.Fatal("Error fetching teams:", err)
-	}
-	defer response.Body.Close()
-
 	var teams []OpenDotaTeam
-	if err := json.NewDecoder(response.Body).Decode(&teams); err != nil {
-		log.Fatal("Error decoding JSON:", err)
+	page := 0
+	for {
+		response, err := http.Get(teamsAPI + "?page=" + strconv.Itoa(page))
+		if err != nil {
+			log.Fatal("Error fetching teams:", err)
+		}
+		defer response.Body.Close()
+
+		var teamsOnPage []OpenDotaTeam
+		if err := json.NewDecoder(response.Body).Decode(&teamsOnPage); err != nil {
+			log.Fatal("Error decoding JSON:", err)
+		}
+		teams = append(teams, teamsOnPage...)
+
+		if len(teamsOnPage) < 1000 {
+			break
+		}
+
+		page++
 	}
 
 	var teamModels []models.Team
 	for _, team := range teams {
-		if team.Name == "" {
+		teamName := strings.TrimSpace(team.Name)
+		if teamName == "" {
 			continue
 		}
 
-		teamModels = append(teamModels, models.Team{
-			ID:            team.ID,
-			Label:         team.Name,
-			LastMatchTime: team.LastMatchTime,
+		// If the team with the same name exists, update the last match time if it's newer
+		existingTeamIndex := slices.IndexFunc(teamModels, func(teamModel models.Team) bool {
+			return strings.EqualFold(teamName, teamModel.Label)
 		})
+		if existingTeamIndex == -1 {
+			teamModels = append(teamModels, models.Team{
+				ID:            team.ID,
+				Label:         teamName,
+				LastMatchTime: team.LastMatchTime,
+			})
+		} else if teamModels[existingTeamIndex].LastMatchTime < team.LastMatchTime {
+			teamModels[existingTeamIndex] = models.Team{
+				ID:            team.ID,
+				Label:         teamName,
+				LastMatchTime: team.LastMatchTime,
+			}
+		}
 	}
 
 	return teamModels

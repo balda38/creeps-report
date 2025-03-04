@@ -15,14 +15,14 @@ func main() {
 	database.EnableDBConnection()
 	if len(teamsToInsert) > 0 {
 		for teamIndex, team := range teamsToInsert {
-			// Set team as inactive if they have not played a match in last 2 years. TODO: probably, it should be configurable/less (?)
-			// Probably, it should be also filtered by rating (but i don't know what amount should be used)
-			teamsToInsert[teamIndex].IsActive = team.LastMatchTime >= time.Now().AddDate(-2, 0, 0).Unix()
+			// Set team as inactive if they have not played a match in last six months. TODO: probably, it should be configurable/less (?)
+			// Probably, it should be also filtered by rating (but i don't know what amount should be used. By maybe 1000)
+			teamsToInsert[teamIndex].IsActive = team.LastMatchTime >= time.Now().AddDate(0, -6, 0).Unix()
 		}
 
 		result := database.DB.Clauses(
 			clause.OnConflict{DoNothing: true},
-		).Create(&teamsToInsert)
+		).CreateInBatches(&teamsToInsert, 1000)
 		if result.Error != nil {
 			log.Fatal("Error inserting teams:", result.Error)
 		}
