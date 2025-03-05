@@ -15,6 +15,7 @@ var (
 )
 
 // TODO: move migrations to a separate function?
+// TODO: close connections?
 func EnableDBConnection() {
 	once.Do(func() {
 		var err error

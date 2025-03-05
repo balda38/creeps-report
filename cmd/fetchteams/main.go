@@ -5,18 +5,17 @@ import (
 	"time"
 
 	"github.com/balda38/creeps-report/database"
-	"github.com/balda38/creeps-report/opendotaclient"
+	"github.com/balda38/creeps-report/opendotaclient/teams"
 	"gorm.io/gorm/clause"
 )
 
 func main() {
-	teamsToInsert := opendotaclient.FetchTeams()
+	teamsToInsert := teams.FetchTeams()
 
 	database.EnableDBConnection()
 	if len(teamsToInsert) > 0 {
 		for teamIndex, team := range teamsToInsert {
-			// Set team as inactive if they have not played a match in last six months. TODO: probably, it should be configurable/less (?)
-			// Probably, it should be also filtered by rating (but i don't know what amount should be used. By maybe 1000)
+			// Set team as inactive if they have not played a match in last six months
 			teamsToInsert[teamIndex].IsActive = team.LastMatchTime >= time.Now().AddDate(0, -6, 0).Unix()
 		}
 

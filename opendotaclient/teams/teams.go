@@ -1,4 +1,4 @@
-package opendotaclient
+package teams
 
 import (
 	"encoding/json"
@@ -9,23 +9,13 @@ import (
 	"strings"
 
 	"github.com/balda38/creeps-report/database/models"
+	"github.com/balda38/creeps-report/opendotaclient/types"
 )
 
 const teamsAPI = "https://api.opendota.com/api/teams"
 
-type OpenDotaTeam struct {
-	ID            int     `json:"team_id"`
-	Name          string  `json:"name"`
-	Tag           string  `json:"tag"`
-	Win           int     `json:"wins"`
-	Loss          int     `json:"losses"`
-	Rating        float64 `json:"rating"`
-	LastMatchTime int64   `json:"last_match_time"`
-	LogoUrl       string  `json:"logo_url"`
-}
-
 func FetchTeams() []models.Team {
-	var teams []OpenDotaTeam
+	var teams []types.OpenDotaTeam
 	page := 0
 	for {
 		response, err := http.Get(teamsAPI + "?page=" + strconv.Itoa(page))
@@ -34,7 +24,7 @@ func FetchTeams() []models.Team {
 		}
 		defer response.Body.Close()
 
-		var teamsOnPage []OpenDotaTeam
+		var teamsOnPage []types.OpenDotaTeam
 		if err := json.NewDecoder(response.Body).Decode(&teamsOnPage); err != nil {
 			log.Fatal("Error decoding JSON:", err)
 		}
