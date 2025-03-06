@@ -14,7 +14,6 @@ var (
 	once sync.Once
 )
 
-// TODO: close connections?
 func EnableDBConnection() {
 	once.Do(func() {
 		var err error

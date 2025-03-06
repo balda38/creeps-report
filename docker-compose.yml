@@ -8,10 +8,9 @@ services:
     restart: always
     volumes:
       - ./:/app
+      - ./data:/app/data
     ports:
       - 8080:${AIR_PORT}
-    environment:
-      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
     logging:
       options:
         max-size: "10m"
