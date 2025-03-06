@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./:/app
+      - ./data:/app/data
+    ports:
+      - 8080:${AIR_PORT}
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
