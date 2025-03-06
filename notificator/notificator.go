@@ -100,7 +100,7 @@ func NotifySubscribers(
 			ParseMode: models.ParseModeHTML,
 		})
 		if err != nil {
-			log.Println("Failed to send message to chat "+strconv.FormatInt(chatId, 10)+":", err) // TODO: FormatInt 10?
+			log.Println("Failed to send message to chat "+strconv.FormatInt(chatId, 10)+":", err)
 		}
 	}
 }

@@ -35,7 +35,7 @@ func RegisterForBot(botInstance *bot.Bot) {
 	}
 
 	botInstance.SetMyCommands(
-		context.TODO(), // TODO: ???
+		context.Background(),
 		&bot.SetMyCommandsParams{
 			Commands: myCommands,
 		},

@@ -14,7 +14,6 @@ var (
 	once sync.Once
 )
 
-// TODO: move migrations to a separate function?
 // TODO: close connections?
 func EnableDBConnection() {
 	once.Do(func() {
@@ -23,13 +22,26 @@ func EnableDBConnection() {
 		if err != nil {
 			log.Fatal("Failed to connect to database: ", err)
 		}
-
-		err = DB.AutoMigrate(
-			&models.Team{},
-			&models.Subscription{},
-		)
-		if err != nil {
-			log.Fatal("Migration failed: ", err)
-		}
 	})
+}
+
+func RunMigrations() {
+	err := DB.AutoMigrate(
+		&models.Team{},
+		&models.Subscription{},
+	)
+	if err != nil {
+		log.Fatal("Migration failed: ", err)
+	}
+}
+
+func CloseDBConnection() {
+	db, err := DB.DB()
+	if err != nil {
+		log.Fatal("Failed to get DB: ", err)
+	}
+	err = db.Close()
+	if err != nil {
+		log.Fatal("Failed to close DB: ", err)
+	}
 }

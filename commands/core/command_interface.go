@@ -15,5 +15,5 @@ type Command interface {
 		ctx context.Context,
 		b *bot.Bot,
 		update *models.Update,
-	) // TODO: return type?
+	)
 }
