@@ -16,7 +16,7 @@ Typing this in the chat will show you the list of currently active professional 
 
 <pre>
 ❌ Gaimin Gladiators - to subscribe: /team_subscribe Gaimin Gladiators
-✅ Team Spirit - to subscribe: /team_unsubscribe Team Spirit
+✅ Team Spirit - to unsubscribe: /team_unsubscribe Team Spirit
 </pre>
 
 As you can guess, we currently have a subscription to <i>Team Spirit</i> and we don't have a subscription to <i>Gaimin Gladiators</i>.
@@ -29,7 +29,7 @@ Typing, for example, <code>/team_subscribe Gaimin Gladiators</code> will subscri
 Typing, for example, <code>/team_unsubscribe Team Spirit</code> will unsubscribe you from that team's updates. Simple too.
 
 
-<h2>Ok. What do the team's match result mean? I'd rather show you:</h2>
+<h2>Ok. What do the team's match result mean? I'd rather show you</h2>
 
 Once some match of one of the teams you are subscribed to ends, the bot will send your a message like that:
 
@@ -51,7 +51,7 @@ What we can see here:
 
 Just docker and docker-compose. Nothing else.
 
-[Air](https://github.com/air-verse/air) will do all the reloading work for you!
+[Air](https://github.com/air-verse/air) will do all the rebuilding work for you!
 
 The data is fetched from [OpenDOTA API](https://docs.opendota.com/)
 
@@ -60,7 +60,7 @@ The data is fetched from [OpenDOTA API](https://docs.opendota.com/)
 - <code>AIR_PORT</code> - if you need a non-standard port to use Air
 - <code>TELEGRAM_BOT_TOKEN</code> - the token you got from [@BotFather](https://t.me/BotFather)
 - <code>TELEGRAM_BOT_ADMIN</code> - telegram tag of the bot admin without <code>@</code>
-- <code>FETCH_RECENT_MATCHES_TIMEOUT</code> - the value in seconds of how often the last matches will be parsed (this value will affect the delay with which we receive results)
+- <code>FETCH_RECENT_MATCHES_TIMEOUT</code> - the value in seconds of how often the latest matches will be parsed (this value will affect the delay with which we receive results)
 
 <h3>CLI commands</h3>
 
