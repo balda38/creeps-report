@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/go-telegram/bot"
@@ -39,6 +40,9 @@ func main() {
 
 // TODO: cron/system.d or something like that
 func StartWatchingRecentMatches(db *gorm.DB, botInstance *bot.Bot) {
+	timeout, _ := strconv.Atoi(os.Getenv("FETCH_RECENT_MATCHES_TIMEOUT"))
+	timeoutDuration := time.Duration(timeout) * time.Second
+
 	var lastMatchTime int64
 	db.Model(&dbModels.Team{}).Select("MAX(last_match_time)").Row().Scan(&lastMatchTime)
 
@@ -77,6 +81,6 @@ func StartWatchingRecentMatches(db *gorm.DB, botInstance *bot.Bot) {
 			lastMatchTime = recentMatches[0].StartTime
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(timeoutDuration)
 	}
 }
