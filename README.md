@@ -2,7 +2,7 @@
 
 <img src="avatar.png" width="300" />
 
-And I can bring you the results of the latest Dota2 matches as quick as possible!
+And I can bring you the results of the latest professional Dota2 matches as quick as possible! 
 
 <h1>1. I'm obviously a Telegram bot</h1>
 
