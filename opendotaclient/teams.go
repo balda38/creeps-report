@@ -1,4 +1,4 @@
-package teams
+package opendotaclient
 
 import (
 	"encoding/json"

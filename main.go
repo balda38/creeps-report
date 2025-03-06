@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"slices"
 	"time"
 
 	"github.com/go-telegram/bot"
@@ -13,7 +14,8 @@ import (
 	commandsCore "github.com/balda38/creeps-report/commands/core"
 	"github.com/balda38/creeps-report/database"
 	dbModels "github.com/balda38/creeps-report/database/models"
-	"github.com/balda38/creeps-report/opendotaclient/matches"
+	"github.com/balda38/creeps-report/notificator"
+	"github.com/balda38/creeps-report/opendotaclient"
 )
 
 func main() {
@@ -41,7 +43,40 @@ func StartWatchingRecentMatches(db *gorm.DB, botInstance *bot.Bot) {
 	db.Model(&dbModels.Team{}).Select("MAX(last_match_time)").Row().Scan(&lastMatchTime)
 
 	for {
-		matches.FetchRecentMatches(db, botInstance, &lastMatchTime)
+		recentMatches := opendotaclient.FetchRecentMatches()
+
+		// TODO: is this possible that several matches end at the same time?
+		if len(recentMatches) > 0 && recentMatches[0].StartTime > lastMatchTime {
+			var subscriptions []dbModels.Subscription
+			db.Model(&dbModels.Subscription{}).Find(&subscriptions)
+
+			for _, match := range recentMatches {
+				if match.StartTime <= lastMatchTime {
+					break
+				}
+
+				updateResult := db.Model(&dbModels.Team{}).
+					Where("id IN (?, ?)", match.RadiandTeamId, match.DireTeamId).
+					Where("last_match_time < ?", match.StartTime).
+					Updates(dbModels.Team{IsActive: true, LastMatchTime: match.StartTime})
+
+				if updateResult.Error == nil && updateResult.RowsAffected > 0 {
+					var relatedChats []int64
+					for _, subsubscription := range subscriptions {
+						if (subsubscription.TeamID == match.RadiandTeamId ||
+							subsubscription.TeamID == match.DireTeamId) && !slices.Contains(relatedChats, subsubscription.ChatID) {
+							relatedChats = append(relatedChats, subsubscription.ChatID)
+						}
+					}
+					if len(relatedChats) > 0 {
+						go notificator.NotifySubscribers(botInstance, relatedChats, match.ID)
+					}
+				}
+			}
+
+			lastMatchTime = recentMatches[0].StartTime
+		}
+
 		time.Sleep(5 * time.Second)
 	}
 }

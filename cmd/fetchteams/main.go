@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/balda38/creeps-report/database"
-	"github.com/balda38/creeps-report/opendotaclient/teams"
+	"github.com/balda38/creeps-report/opendotaclient"
 	"gorm.io/gorm/clause"
 )
 
 func main() {
-	teamsToInsert := teams.FetchTeams()
+	teamsToInsert := opendotaclient.FetchTeams()
 
 	database.EnableDBConnection()
 	if len(teamsToInsert) > 0 {

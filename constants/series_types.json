@@ -1,0 +1,26 @@
+{
+    "0": {
+        "short_name": "Bo1",
+        "long_name": "Best of 1",
+        "required_number_of_wins": 1,
+        "max_number_of_matches": 1
+    },
+    "1": {
+        "short_name": "Bo3",
+        "long_name": "Best of 3",
+        "required_number_of_wins": 2,
+        "max_number_of_matches": 3
+    },
+    "2": {
+        "short_name": "Bo5",
+        "long_name": "Best of 5",
+        "required_number_of_wins": 3,
+        "max_number_of_matches": 5
+    },
+    "3": {
+        "short_name": "Bo2",
+        "long_name": "Best of 2",
+        "required_number_of_wins": 2,
+        "max_number_of_matches": 2
+    }
+}
