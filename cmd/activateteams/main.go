@@ -9,7 +9,6 @@ import (
 	"github.com/balda38/creeps-report/database/models"
 )
 
-// TODO: add support for multiple team labels
 func main() {
 	database.EnableDBConnection()
 
@@ -20,7 +19,10 @@ func main() {
 			Where("last_match_time >= ?", timestampToCompare).
 			Update("is_active", true)
 	} else {
-		team := strings.ReplaceAll(os.Args[1], "_", " ")
-		database.DB.Model(&models.Team{}).Where("label = ?", team).Update("is_active", true)
+		var teams []string
+		for _, team := range os.Args[1:] {
+			teams = append(teams, strings.ReplaceAll(team, "_", " "))
+		}
+		database.DB.Model(&models.Team{}).Where("label IN (?)", teams).Update("is_active", true)
 	}
 }
