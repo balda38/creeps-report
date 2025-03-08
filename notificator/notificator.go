@@ -54,9 +54,23 @@ func NotifySubscribers(
 		} else {
 			playerName = player.Name
 		}
+		playerName = strings.ReplaceAll(playerName, "&", "&amp;")
+		playerName = strings.ReplaceAll(playerName, "<", "&lt;")
+		playerName = strings.ReplaceAll(playerName, ">", "&gt;")
+
 		playerStats[i] = playerName + " (" + heroes[strconv.Itoa(player.HeroId)].LocalizedName + ")" +
 			" - " + strconv.Itoa(player.Kills) + "/" + strconv.Itoa(player.Deaths) + "/" + strconv.Itoa(player.Assists)
 	}
+
+	radinatTeamName := matchDetails.RadiantName
+	radinatTeamName = strings.ReplaceAll(radinatTeamName, "&", "&amp;")
+	radinatTeamName = strings.ReplaceAll(radinatTeamName, "<", "&lt;")
+	radinatTeamName = strings.ReplaceAll(radinatTeamName, ">", "&gt;")
+
+	direTeamName := matchDetails.DireName
+	direTeamName = strings.ReplaceAll(direTeamName, "&", "&amp;")
+	direTeamName = strings.ReplaceAll(direTeamName, "<", "&lt;")
+	direTeamName = strings.ReplaceAll(direTeamName, ">", "&gt;")
 
 	teamWinsInSeries := map[int]int{
 		matchDetails.RadiandTeamId: 0,
@@ -83,9 +97,9 @@ func NotifySubscribers(
 			// Series type
 			"<strong>" + seriesType.LongName + "</strong>\n" +
 			// Match score
-			radiantSeriesScore + " <strong>" + matchDetails.RadiantName + "</strong> " +
+			radiantSeriesScore + " <strong>" + radinatTeamName + "</strong> " +
 			strconv.Itoa(matchDetails.RadiantScore) + " - " + strconv.Itoa(matchDetails.DireScore) +
-			" <strong>" + matchDetails.DireName + "</strong> " + direSeriesScore + "\n" +
+			" <strong>" + direTeamName + "</strong> " + direSeriesScore + "\n" +
 			// Match duration
 			"🕒 " + duration.Format(timeFormat) + "\n\n" +
 			// Radiant team info
