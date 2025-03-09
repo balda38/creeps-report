@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"slices"
 	"strconv"
@@ -27,6 +28,7 @@ func main() {
 
 	database.EnableDBConnection()
 
+	// TODO: add secret token for webhook
 	creepsReportBot, botCreationErr := bot.New(os.Getenv("TELEGRAM_BOT_TOKEN"))
 	if botCreationErr != nil {
 		log.Fatal("Failed to create bot: ", botCreationErr)
@@ -35,7 +37,13 @@ func main() {
 	go StartWatchingRecentMatches(database.DB, creepsReportBot)
 
 	commandsCore.RegisterForBot(creepsReportBot)
-	creepsReportBot.Start(context.Background())
+
+	go creepsReportBot.StartWebhook(context.Background())
+
+	log.Fatal(http.ListenAndServe(
+		os.Getenv("APP_URL")+":"+os.Getenv("PORT"),
+		creepsReportBot.WebhookHandler()),
+	)
 }
 
 // TODO: cron/system.d or something like that
@@ -43,32 +51,32 @@ func StartWatchingRecentMatches(db *gorm.DB, botInstance *bot.Bot) {
 	timeout, _ := strconv.Atoi(os.Getenv("FETCH_RECENT_MATCHES_TIMEOUT"))
 	timeoutDuration := time.Duration(timeout) * time.Second
 
-	var lastMatchTime int64
-	db.Model(&dbModels.Team{}).Select("MAX(last_match_time)").Row().Scan(&lastMatchTime)
+	var lastSavedMatchTime int64
+	db.Model(&dbModels.Team{}).Select("MAX(last_match_time)").Row().Scan(&lastSavedMatchTime)
 
 	for {
 		recentMatches := opendotaclient.FetchRecentMatches()
 
-		// TODO: is this possible that several matches end at the same time?
-		if len(recentMatches) > 0 && recentMatches[0].StartTime > lastMatchTime {
+		if len(recentMatches) > 0 {
 			var subscriptions []dbModels.Subscription
 			db.Model(&dbModels.Subscription{}).Find(&subscriptions)
 
-			for _, match := range recentMatches {
-				if match.StartTime <= lastMatchTime {
-					break
-				}
+			recentMatchTime := recentMatches[0].StartTime
 
+			// TODO: create team if it doesn't exist (?)
+			for _, match := range recentMatches {
 				updateResult := db.Model(&dbModels.Team{}).
+					Debug().
 					Where("id IN (?, ?)", match.RadiandTeamId, match.DireTeamId).
 					Where("last_match_time < ?", match.StartTime).
 					Updates(dbModels.Team{IsActive: true, LastMatchTime: match.StartTime})
 
 				if updateResult.Error == nil && updateResult.RowsAffected > 0 {
-					var relatedChats []int64
+					relatedChats := []int64{}
 					for _, subsubscription := range subscriptions {
 						if (subsubscription.TeamID == match.RadiandTeamId ||
-							subsubscription.TeamID == match.DireTeamId) && !slices.Contains(relatedChats, subsubscription.ChatID) {
+							subsubscription.TeamID == match.DireTeamId) &&
+							!slices.Contains(relatedChats, subsubscription.ChatID) {
 							relatedChats = append(relatedChats, subsubscription.ChatID)
 						}
 					}
@@ -76,9 +84,13 @@ func StartWatchingRecentMatches(db *gorm.DB, botInstance *bot.Bot) {
 						go notificator.NotifySubscribers(botInstance, relatedChats, match.ID)
 					}
 				}
+
+				if match.StartTime > recentMatchTime {
+					recentMatchTime = match.StartTime
+				}
 			}
 
-			lastMatchTime = recentMatches[0].StartTime
+			lastSavedMatchTime = recentMatchTime
 		}
 
 		time.Sleep(timeoutDuration)
