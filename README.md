@@ -57,6 +57,8 @@ The data is fetched from [OpenDOTA API](https://docs.opendota.com/)
 
 <h3>Environment variables</h3>
 
+TODO: more variables
+
 - <code>AIR_PORT</code> - if you need a non-standard port to use Air
 - <code>TELEGRAM_BOT_TOKEN</code> - the token you got from [@BotFather](https://t.me/BotFather)
 - <code>TELEGRAM_BOT_ADMIN</code> - telegram tag of the bot admin without <code>@</code>
